@@ -4,9 +4,6 @@ const dotenv = require("dotenv");
 const doStreamRoute = require("./routes/doStreamRoute");
 const app = express();
 dotenv.config();
-
-
-// ----------------------------------- Variables -----------------------------------
 const PORT = process.env.PORT || 3000;
 
 
