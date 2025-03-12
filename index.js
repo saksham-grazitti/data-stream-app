@@ -1,12 +1,16 @@
-require("dotenv").config();
+// ----------------------------------- Modules -----------------------------------
 const express = require("express");
+const dotenv = require("dotenv");
 const mysql = require("mysql2/promise");
 const mongoose = require("mongoose");
-
 const app = express();
-const PORT = process.env.PORT || 5000;
+dotenv.config();
 
-// MySQL Connection
+
+// ----------------------------------- Variables -----------------------------------
+const PORT = process.env.PORT || 5000;
+const mongoURI = process.env.MONGO_URI;
+const BATCH_SIZE = 10000;
 const mysqlConfig = {
   host: process.env.MYSQL_HOST,
   user: process.env.MYSQL_USER,
@@ -14,10 +18,12 @@ const mysqlConfig = {
   database: process.env.MYSQL_DB,
 };
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+
+mongoose.connect(mongoURI).then(() => {
+  app.listen(PORT);
+  console.log(`Server running on port: ${PORT}`);
+}).catch((err) => {
+  console.error(err);
 });
 
 // Define MongoDB Schemas
@@ -36,9 +42,6 @@ const migrationLogSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 const MigrationLog = mongoose.model("MigrationLog", migrationLogSchema);
 
-// Batch Migration Settings
-const BATCH_SIZE = 10000; // Adjust batch size based on your system resources
-
 // Migration Route
 app.get("/migrate", async (req, res) => {
   try {
@@ -53,7 +56,7 @@ app.get("/migrate", async (req, res) => {
 
     while (true) {
       console.log(`Fetching records after ID: ${lastId}`);
-      
+
       // Fetch data in batches
       const [rows] = await mysqlConn.execute(
         `SELECT id, name, email, created_at FROM users WHERE id > ? ORDER BY id ASC LIMIT ?`,
@@ -88,6 +91,3 @@ app.get("/migrate", async (req, res) => {
     res.status(500).json({ error: "Migration failed" });
   }
 });
-
-// Start Express Server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
