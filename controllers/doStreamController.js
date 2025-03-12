@@ -5,6 +5,7 @@ const StreamLog = require("../models/streamedModel");
 
 
 // ----------------------------------- Variables -----------------------------------
+const mongoURI = process.env.MONGO_URI;
 const BATCH_SIZE = process.env.BATCH_SIZE || 10000;
 const mysqlConfig = {
     host: process.env.MYSQL_HOST,
@@ -18,6 +19,7 @@ const mysqlConfig = {
 async function doStream(req, resp) {
     try {
         const mysqlConn = await mysql.createConnection(mysqlConfig);
+        await mongoose.connect(mongoURI);
 
         const lastLog = await StreamLog.findOne();
         let lastId = lastLog ? lastLog.lastStreamedId : 0;
