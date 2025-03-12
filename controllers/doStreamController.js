@@ -18,8 +18,8 @@ async function doStream(req, resp) {
         const mysqlConn = await mysql.createConnection(mysqlConfig);
 
         // Get last migrated ID from logs
-        const lastLog = await MigrationLog.findOne().sort({ lastMigratedId: -1 });
-        let lastId = lastLog ? lastLog.lastMigratedId : 0;
+        const lastLog = await StreamLog.findOne().sort({ lastStreamedId: -1 });
+        let lastId = lastLog ? lastLog.lastStreamedId : 0;
 
         let totalMigrated = 0;
 
@@ -35,16 +35,16 @@ async function doStream(req, resp) {
 
             // Update migration log
             lastId = rows[rows.length - 1].id;
-            await MigrationLog.updateOne({}, { lastMigratedId: lastId }, { upsert: true });
+            await StreamLog.updateOne({ lastStreamedId: lastId });
 
             console.log(`Migrated ${rows.length} records. Last ID: ${lastId}`);
         }
 
         await mysqlConn.end();
-        res.json({ message: "Migration completed!", totalMigrated });
+        resp.json({ message: "Streaming completed!", totalMigrated });
     } catch (error) {
-        console.error("Migration Error:", error);
-        res.status(500).json({ error: "Migration failed" });
+        console.error("Streaming Error:", error);
+        resp.status(500).json({ error: "Streaming failed" });
     }
 }
 
