@@ -1,7 +1,10 @@
 // ----------------------------------- Modules -----------------------------------
 const mysql = require("mysql2/promise");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 const User = require("../models/userModel");
 const StreamLog = require("../models/streamedModel");
+dotenv.config();
 
 
 // ----------------------------------- Variables -----------------------------------
@@ -32,7 +35,10 @@ async function doStream(req, resp) {
 
             if (rows.length === 0) break;
 
-            await User.bulkWrite(rows);
+            await User.bulkWrite(rows.map(doc => ({
+                insertOne: { document: doc }
+            })));
+
             totalStreamed += rows.length;
 
             lastId = rows[rows.length - 1].id;
