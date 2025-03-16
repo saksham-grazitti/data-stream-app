@@ -1,0 +1,38 @@
+CREATE DATABASE test_db;
+USE test_db;
+DROP TABLE users;
+DROP DATABASE test_db;
+
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO users (name, email, created_at)
+SELECT 
+    CONCAT('User', FLOOR(RAND() * 10000000)), 
+    CONCAT('user', UUID(), '@example.com'),
+    NOW() - INTERVAL FLOOR(RAND() * 365) DAY
+FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) AS a
+CROSS JOIN (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) AS b
+CROSS JOIN (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) AS c
+CROSS JOIN (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) AS d
+CROSS JOIN (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) AS e
+CROSS JOIN (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) AS f
+CROSS JOIN (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) AS g
+LIMIT 1000000;
+
+INSERT INTO users (name, email, created_at)
+SELECT 
+    name, 
+    CONCAT(SUBSTRING_INDEX(email, '@', 1), '_', id + (SELECT MAX(id) FROM users), '@example.com'),
+    created_at 
+FROM users;
+
+SELECT table_schema AS db_name, 
+       table_name, 
+       ROUND((data_length + index_length) / (1024 * 1024 * 1024), 2) AS size_gb
+FROM information_schema.tables
+WHERE table_schema = 'test_db' AND table_name = 'users';

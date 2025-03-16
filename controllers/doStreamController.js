@@ -29,7 +29,7 @@ async function doStream(req, resp) {
         let totalStreamed = 0;
 
         while (true) {
-            console.log(`Recording fetching started from ID: ${lastId}`);
+            console.log(`Data fetching started from ID: ${lastId}`);
 
             const [rows] = await mysqlConn.execute(`SELECT * FROM users WHERE id > ? LIMIT ?`, [lastId, BATCH_SIZE]);
 
@@ -41,8 +41,9 @@ async function doStream(req, resp) {
 
             totalStreamed += rows.length;
 
-            lastId = rows[rows.length - 1].id;
-            await StreamLog.updateOne({ lastStreamedId: lastId });
+            let updatedId = rows[rows.length - 1].id;;
+            await StreamLog.updateOne({ lastStreamedId: lastId }, { $set: { lastStreamedId: updatedId } }, { upsert: true });
+            lastId = updatedId;
         }
 
         await mysqlConn.end();
